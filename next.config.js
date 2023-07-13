@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-}
+	reactStrictMode: true,
+	images: {
+		domains: ['m.media-amazon.com'],
+	},
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
+// https://m.media-amazon.com/images/I/61xSIru3MZL._SL1500_.jpg
