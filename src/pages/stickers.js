@@ -6,7 +6,7 @@ const stickers = () => {
 		<div>
 			<section className='text-gray-600 body-font'>
 				<div className='container px-5 py-24 mx-auto'>
-					<div className='flex flex-wrap -m-4'>
+					<div className='flex flex-wrap -m-4 justify-center'>
 						<div className='lg:w-1/4 md:w-1/2 p-4 w-full shadow-md m-2'>
 							<Link
 								href={'https://m.media-amazon.com/images/I/81NPavDerAL._SL1500_.jpg'}
