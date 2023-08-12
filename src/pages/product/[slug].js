@@ -4,10 +4,10 @@ import axios from 'axios';
 import { useRouter } from 'next/router';
 import dbConnect from '@/middleware/mongoose';
 import Product from '@/models/product';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const Slug = ({ addToCart, product, varients }) => {
-	// console.log(product, varients);
-
+const Slug = ({ buyNow, addToCart, product, varients }) => {
 	const pincode = useRef();
 	const [isServicable, setIsServicable] = useState(null);
 	const router = useRouter();
@@ -15,11 +15,33 @@ const Slug = ({ addToCart, product, varients }) => {
 	const [pin, setPin] = useState();
 
 	const checkServiceability = async () => {
-		let pins = await axios.get('http://localhost:3000/api/pincode');
+		let pins = await axios.get(`${process.env.HOST}/api/pincode`);
 		let pinJson = await pins.data;
 		if (pinJson.includes(parseInt(pin))) {
+			toast.success('Your pincode is servicable!', {
+				position: 'top-center',
+				autoClose: 1000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				progress: undefined,
+				theme: 'dark',
+			});
 			setIsServicable(true);
-		} else setIsServicable(false);
+		} else {
+			setIsServicable(false);
+			toast.error('Sorry, Pincode not servicable!', {
+				position: 'top-center',
+				autoClose: 1000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				progress: undefined,
+				theme: 'dark',
+			});
+		}
 	};
 	const onChangePin = e => {
 		setPin(e.target.value);
@@ -42,8 +64,10 @@ const Slug = ({ addToCart, product, varients }) => {
 	const pageRefresh = async (color, size) => {
 		console.log('color', color, 'size', size);
 		console.log('titleeeeeeee', product.title);
-		const response = await axios.post('http://localhost:3000/api/dbfind', {
-			category: 't-shirt',
+		console.log(product.category);
+
+		const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
+			category: product.category,
 			title: product.title,
 			color: color,
 			size: size,
@@ -55,7 +79,7 @@ const Slug = ({ addToCart, product, varients }) => {
 		if (clickedProductSlug.length === 0) {
 			console.log('first');
 
-			const response = await axios.post('http://localhost:3000/api/dbfind', {
+			const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
 				category: 't-shirt',
 				color: color,
 			});
@@ -66,8 +90,21 @@ const Slug = ({ addToCart, product, varients }) => {
 			window.location.href = `${clickedProductSlug[0].slug}?size=${size}`;
 		}
 	};
+
 	return (
 		<div>
+			<ToastContainer
+				position='top-center'
+				autoClose={1000}
+				hideProgressBar={false}
+				newestOnTop={false}
+				closeOnClick
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme='dark'
+			/>
 			<section className='text-gray-600 body-font overflow-hidden'>
 				<div className='container px-5 py-16 mx-auto'>
 					<div className='lg:w-4/5 mx-auto flex flex-wrap'>
@@ -228,10 +265,12 @@ const Slug = ({ addToCart, product, varients }) => {
 								<span className='title-font font-medium text-2xl text-gray-900'>₹{product.price}</span>
 								<button
 									className='flex ml-4 text-white bg-pink-500 border-0 lg:py-2 lg:px-6 focus:outline-none hover:bg-pink-600 rounded md:p-4 md:px-2 items-center justify-center p-2'
-									onClick={() => addToCart(slug, 1, 499, product.title, Size, Color)}>
+									onClick={() => addToCart(slug, 1, product.price, product.title, Size, Color)}>
 									Add to cart
 								</button>
-								<button className='flex text-white ml-4 bg-pink-500 border-0 lg:py-2 lg:px-6 focus:outline-none hover:bg-pink-600 rounded md:p-4 md:px-2 items-center justify-center p-2'>
+								<button
+									className='flex text-white ml-4 bg-pink-500 border-0 lg:py-2 lg:px-6 focus:outline-none hover:bg-pink-600 rounded md:p-4 md:px-2 items-center justify-center p-2'
+									onClick={() => buyNow(slug, 1, product.price, product.title, Size, Color)}>
 									Buy Now
 								</button>
 								<button className='rounded-full w-10 h-10 bg-gray-200 p-0 border-0 inline-flex items-center justify-center text-gray-500 ml-4'>
@@ -286,7 +325,7 @@ export async function getServerSideProps(context) {
 
 	const product = await Product.find({ slug: context.query.slug });
 
-	let varient = await Product.find({ title: product[0].title, availQty: { $gt: 0 } });
+	let varient = await Product.find({ title: product[0].title, availQty: { $gt: 0 }, category: product[0].category });
 
 	let colorSizeSlug = {};
 

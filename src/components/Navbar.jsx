@@ -4,16 +4,34 @@ import { useRef } from 'react';
 import { AiOutlineShoppingCart, AiFillCloseCircle, AiFillPlusCircle, AiFillMinusCircle } from 'react-icons/ai';
 import { BsFillBagCheckFill } from 'react-icons/bs';
 import { MdAccountCircle } from 'react-icons/md';
+import { Fragment } from 'react';
+import { Menu, Transition } from '@headlessui/react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const Navbar = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
+const Navbar = ({ logout, user, addToCart, cart, removeFromCart, clearCart, subTotal }) => {
 	const ref = useRef();
 	const toggleCart = () => {
 		ref.current.classList.toggle('translate-x-full');
 	};
-
+	function classNames(...classes) {
+		return classes.filter(Boolean).join(' ');
+	}
 	return (
 		<div className='flex flex-col md:flex-row md:justify-start justify-center items-center shadow-md sticky top-0 z-10 bg-white'>
-			<div className='mx-5'>
+			<ToastContainer
+				position='top-right'
+				autoClose={1000}
+				hideProgressBar={false}
+				newestOnTop={false}
+				closeOnClick
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme='light'
+			/>
+			<div className='mr-auto sm:mx-5'>
 				<Link href={'/'}>
 					<Image
 						src={'/logo.webp'}
@@ -42,13 +60,69 @@ const Navbar = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
 				</ul>
 			</div>
 			<div className='cart absolute right-0 mx-5 top-2 cursor-pointer flex justify-center items-center'>
-				<Link href={'/login'}>
-					<MdAccountCircle className='text-2xl md:text-3xl mx-2' />
-				</Link>
+				{user.value && (
+					<Menu as='div' className='relative inline-block text-left'>
+						<div>
+							<Menu.Button className='inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50'>
+								<MdAccountCircle className='text-2xl md:text-3xl mx-2' />
+							</Menu.Button>
+						</div>
+
+						<Transition
+							as={Fragment}
+							enter='transition ease-out duration-100'
+							enterFrom='transform opacity-0 scale-95'
+							enterTo='transform opacity-100 scale-100'
+							leave='transition ease-in duration-75'
+							leaveFrom='transform opacity-100 scale-100'
+							leaveTo='transform opacity-0 scale-95'>
+							<Menu.Items className='absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none'>
+								<div className='py-1'>
+									<Menu.Item>
+										{({ active }) => (
+											<Link
+												href='/myaccount'
+												className={classNames(active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm')}>
+												Profile
+											</Link>
+										)}
+									</Menu.Item>
+									<Menu.Item>
+										{({ active }) => (
+											<Link
+												href='/orders'
+												className={classNames(active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm')}>
+												Order
+											</Link>
+										)}
+									</Menu.Item>
+									<Menu.Item>
+										{({ active }) => (
+											<button
+												onClick={logout}
+												className={classNames(
+													active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
+													'block w-full px-4 py-2 text-left text-sm'
+												)}>
+												Sign out
+											</button>
+										)}
+									</Menu.Item>
+								</div>
+							</Menu.Items>
+						</Transition>
+					</Menu>
+				)}
+				{!user.value && (
+					<Link href={'/login'}>
+						<button className='bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-full mr-3'>Login</button>
+					</Link>
+				)}
 				<AiOutlineShoppingCart className='text-2xl md:text-3xl' onClick={toggleCart} />
 			</div>
+
 			<div
-				className='w-72 sideCart absolute top-0 right-0 bg-white p-10 transition-transform translate-x-full z-20 h-[100vh]'
+				className='w-72 sideCart overflow-y-scroll absolute top-0 right-0 bg-white p-10 transition-transform translate-x-full z-20 h-[100vh]'
 				ref={ref}>
 				<h2 className='font-bold text-xl text-center'>Shoping Cart</h2>
 				<span className='absolute top-2 right-2 cursor-pointer text-2xl text-pink-500' onClick={toggleCart}>

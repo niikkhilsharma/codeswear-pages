@@ -1,7 +1,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 const Forgot = () => {
+	const router = useRouter();
+	useEffect(() => {
+		if (localStorage.getItem('token')) {
+			router.push('/');
+		}
+	}, []);
 	return (
 		<div className='flex min-h-full flex-col justify-center px-6 py-12 lg:px-8'>
 			<div className='sm:mx-auto sm:w-full sm:max-w-sm'>

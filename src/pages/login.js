@@ -1,7 +1,62 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useRouter } from 'next/router';
 
-const Login = () => {
+const Login = ({ setUser }) => {
+	const router = useRouter();
+	const [email, setEmail] = useState('');
+	const [password, setPassword] = useState('');
+
+	const handleChange = e => {
+		if (e.target.name === 'email') {
+			setEmail(e.target.value);
+		} else if (e.target.name === 'password') {
+			setPassword(e.target.value);
+		}
+	};
+
+	useEffect(() => {
+		if (localStorage.getItem('token')) {
+			router.push('/');
+		}
+	}, []);
+
+	const handleSubmit = async e => {
+		e.preventDefault();
+		const login = await axios.post('/api/login', { email, password });
+		if (login.data.success) {
+			localStorage.setItem('token', login.data.token);
+			setUser({ value: login.data.token });
+			toast.success('Successfully loged in', {
+				position: 'top-right',
+				autoClose: 1000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				progress: undefined,
+				theme: 'light',
+			});
+			setTimeout(() => {
+				router.push('/');
+			}, 2000);
+		} else {
+			toast.error(`${login.data.message}`, {
+				position: 'top-right',
+				autoClose: 1000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				progress: undefined,
+				theme: 'light',
+			});
+		}
+	};
 	return (
 		<div className='flex min-h-full flex-col justify-center px-6 py-12 lg:px-8'>
 			<div className='sm:mx-auto sm:w-full sm:max-w-sm'>
@@ -11,13 +66,15 @@ const Login = () => {
 				</h2>
 			</div>
 			<div className='mt-10 sm:mx-auto sm:w-full sm:max-w-sm'>
-				<form className='space-y-6' action='#' method='POST'>
+				<form className='space-y-6' method='POST' onSubmit={handleSubmit}>
 					<div>
 						<label htmlFor='email' className='block text-sm font-medium leading-6 text-gray-900'>
 							Email address
 						</label>
 						<div className='mt-2'>
 							<input
+								onChange={handleChange}
+								value={email}
 								id='email'
 								name='email'
 								type='email'
@@ -40,6 +97,8 @@ const Login = () => {
 						</div>
 						<div className='mt-2'>
 							<input
+								onChange={handleChange}
+								value={password}
 								id='password'
 								name='password'
 								type='password'

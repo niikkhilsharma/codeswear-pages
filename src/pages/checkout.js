@@ -2,8 +2,67 @@ import React from 'react';
 import { AiFillPlusCircle, AiFillMinusCircle } from 'react-icons/ai';
 import { BsFillBagCheckFill } from 'react-icons/bs';
 import Link from 'next/link';
+import axios from 'axios';
 
 const Checkout = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
+	const productSlugs = Object.keys(cart);
+	const initializeRazorpay = () => {
+		return new Promise(resolve => {
+			const script = document.createElement('script');
+			script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+
+			script.onload = () => {
+				resolve(true);
+			};
+			script.onerror = () => {
+				resolve(false);
+			};
+
+			document.body.appendChild(script);
+		});
+	};
+	const makePayment = async () => {
+		const res = await initializeRazorpay();
+
+		if (!res) {
+			alert('Razorpay SDK Failed to load');
+			return;
+		}
+
+		// Make API call to the serverless API
+		// const data = await fetch('/api/razorpay', { method: 'POST' }).then(res => res.json());
+		/* Making the same request using axios */
+		const data = await axios.post('/api/razorpay', { productSlugs });
+		console.log(data.data);
+		var options = {
+			key: process.env.RAZORPAY_KEY, // Enter the Key ID generated from the Dashboard
+			name: 'Codeswear',
+			currency: data.currency,
+			amount: data.amount,
+			order_id: data.id,
+			description: 'Thankyou for your test donation',
+			image: 'https://manuarora.in/logo.png',
+			handler: function (response) {
+				// Validate payment at server - using webhooks is a better idea.
+				alert(response.razorpay_payment_id);
+				alert(response.razorpay_order_id);
+				alert(response.razorpay_signature);
+			},
+			prefill: {
+				name: 'Manu Arora',
+				email: 'manuarorawork@gmail.com',
+				contact: '9999999999',
+			},
+		};
+
+		const paymentObject = new window.Razorpay(options);
+		paymentObject.open();
+
+		paymentObject.on('payment.failed', function (response) {
+			alert('Payment failed. Please try again. Contact support for help');
+		});
+	};
+
 	return (
 		<div className='container m-auto'>
 			<div>
@@ -88,7 +147,9 @@ const Checkout = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
 						{Object.keys(cart).map((id, lenth) => (
 							<li className='list-decimal font-semibold' key={id}>
 								<div className='item flex my-4 justify-between items-center'>
-									<div>{cart[id].name}</div>
+									<div>
+										{cart[id].name}( {cart[id].size}/{cart[id].varient})
+									</div>
 									<div className='w-1/3 flex justify-center items-center cursor-pointer text-pink-500'>
 										<AiFillMinusCircle
 											onClick={() => {
@@ -111,7 +172,8 @@ const Checkout = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
 					<div className='flex justify-center items-center'>
 						<Link
 							href='/checkout'
-							className='border-solid border rounded-full bg-white flex items-center text-xl p-2 justify-between px-4'>
+							className='border-solid border rounded-full bg-white flex items-center text-xl p-2 justify-between px-4'
+							onClick={makePayment}>
 							<BsFillBagCheckFill className='mr-2' /> Pay Now ₹{subTotal}
 						</Link>
 					</div>

@@ -4,60 +4,123 @@ import axios from 'axios';
 import { useRouter } from 'next/router';
 import dbConnect from '@/middleware/mongoose';
 import Product from '@/models/product';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const Slug = ({ addToCart, product, varients }) => {
+const Slug = ({ buyNow, addToCart, product, varients }) => {
 	const pincode = useRef();
 	const [isServicable, setIsServicable] = useState(null);
 	const router = useRouter();
 	const slug = router.query.slug;
 	const [pin, setPin] = useState();
-	const [service, setService] = useState();
 
 	const checkServiceability = async () => {
-		let pins = await axios.get('http://localhost:3000/api/pincode');
-		let pinJson = await pins.json();
+		let pins = await axios.get(`${process.env.HOST}/api/pincode`);
+		let pinJson = await pins.data;
 		if (pinJson.includes(parseInt(pin))) {
-			setService(true);
-		} else setService(false);
+			toast.success('Your pincode is servicable!', {
+				position: 'top-center',
+				autoClose: 1000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				progress: undefined,
+				theme: 'dark',
+			});
+			setIsServicable(true);
+		} else {
+			setIsServicable(false);
+			toast.error('Sorry, Pincode not servicable!', {
+				position: 'top-center',
+				autoClose: 1000,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				progress: undefined,
+				theme: 'dark',
+			});
+		}
 	};
 	const onChangePin = e => {
 		setPin(e.target.value);
 	};
 
-	const [Colors, setColors] = useState(Object.keys(varients));
-	const [Size, setSize] = useState(Object.keys(varients[Colors[0]]));
-	const [sizeValue, setSizeValue] = useState(Size[0]);
+	const [allColors, setAllColors] = useState(Object.keys(varients));
+	const [Color, setColor] = useState(product.color); // color of the clicked product
+	const [Size, setSize] = useState(product.size); //Size of the clicked Product.On initial render we are setting this to the first size of the clicked color present in the varient/colorSizeslug. But when the user selects the color (after the initial render) we are setting this to the clicked color.(if no color is cliked then first size of the cliked color present in the varient/colorSizeSlug).
+	// console.log(Size);
 
-	useEffect(() => {
-		document.querySelector('#colorBtn').classList.add('border-black');
-		document.querySelector('#colorBtn').classList.add('activeColor');
-		document.querySelector('#colorBtn').classList.remove('border-gray-300');
-	}, []);
+	const [allSize, setAllSize] = useState(Object.keys(varients[Color]));
 
-	const pageRefresh = async size => {
-		const activeColor = document.querySelector('.border-black.activeColor').style.backgroundColor;
-		const response = await axios.post('http://localhost:3000/api/dbfind', { size: size, color: activeColor });
-		console.log(response.data);
-		window.location.href = response.data[0].slug;
-		console.log(size, activeColor);
+	//console.log(allColors);
+	//console.log(varients);
+
+	//console.log('from size ', allSize);
+	const colorBtn = useRef();
+	const sizeOption = useRef();
+
+	const pageRefresh = async (color, size) => {
+		console.log('color', color, 'size', size);
+		console.log('titleeeeeeee', product.title);
+		console.log(product.category);
+
+		const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
+			category: product.category,
+			title: product.title,
+			color: color,
+			size: size,
+		});
+
+		let clickedProductSlug = response.data;
+		console.log(clickedProductSlug);
+
+		if (clickedProductSlug.length === 0) {
+			console.log('first');
+
+			const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
+				category: 't-shirt',
+				color: color,
+			});
+			// console.log(response.data);
+			clickedProductSlug = response.data;
+			window.location.href = `${clickedProductSlug[0].slug}`;
+		} else {
+			window.location.href = `${clickedProductSlug[0].slug}?size=${size}`;
+		}
 	};
-	console.log(product[0].slug);
+
 	return (
 		<div>
+			<ToastContainer
+				position='top-center'
+				autoClose={1000}
+				hideProgressBar={false}
+				newestOnTop={false}
+				closeOnClick
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme='dark'
+			/>
 			<section className='text-gray-600 body-font overflow-hidden'>
 				<div className='container px-5 py-16 mx-auto'>
 					<div className='lg:w-4/5 mx-auto flex flex-wrap'>
 						<Image
 							alt='ecommerce'
 							className='lg:w-2/2 w-full lg:h-auto h-64 object-cover object-center rounded'
-							src='https://m.media-amazon.com/images/I/71TqPqvJCQL._UL1440_.jpg'
+							src={product.image}
 							width={400}
 							height={400}
 							style={{ width: 'auto', height: 'auto' }}
 						/>
 						<div className='lg:w-2/2 md:w-full lg:w-[50%] lg:pl-10 lg:py-6 mt-6 lg:mt-0'>
 							<h2 className='text-sm title-font text-gray-500 tracking-widest'>CODESWEAR</h2>
-							<h1 className='text-gray-900 text-3xl title-font font-medium mb-2'>Wear the Code(XL/Blue)</h1>
+							<h1 className='text-gray-900 text-3xl title-font font-medium mb-2'>
+								{product.title} ({Size}/{Color})
+							</h1>
 							<div className='flex mb-4'>
 								<span className='flex items-center'>
 									<svg
@@ -148,30 +211,22 @@ const Slug = ({ addToCart, product, varients }) => {
 									</a>
 								</span>
 							</div>
-							<p className='leading-relaxed'>
-								Fam locavore kickstarter distillery. Mixtape chillwave tumeric sriracha taximy chia microdosing tilde DIY. XOXO
-								fam indxgo juiceramps cornhole raw denim forage brooklyn. Everyday carry +2 seitan poutine tumeric. Gastropub
-								blue bottle austin listicle pour-over, neutra jean shorts keytar banjo tattooed umami cardigan.
-							</p>
+							<p className='leading-relaxed'>{product.description}</p>
 							<div className='flex mt-6 items-center pb-5 border-b-2 border-gray-100 mb-5'>
 								<div className='flex'>
 									<span className='mr-3'>Color</span>
-									{Colors.map(color => (
+									{allColors.map(color => (
 										<button
 											key={color}
-											className='border-2 border-gray-300 rounded-full w-6 h-6 ml-1'
-											style={{ backgroundColor: color }}
-											id='colorBtn'
+											ref={colorBtn}
+											className={`border-2 rounded-full w-6 h-6 ml-1 `}
+											style={{
+												backgroundColor: color,
+												border: `3px solid ${color === Color ? 'black' : '#FEBBCC'}`,
+											}}
+											value={color}
 											onClick={e => {
-												const allColorBtn = Array.from(document.querySelectorAll('#colorBtn'));
-												allColorBtn.forEach(colorBtn => {
-													colorBtn.classList.remove('border-black');
-													colorBtn.classList.add('border-gray-300');
-													colorBtn.classList.remove('.activeColor');
-												});
-												e.target.classList.remove('border-gray-300');
-												e.target.classList.add('border-black');
-												e.target.classList.add('activeColor');
+												pageRefresh(e.target.value, sizeOption.current.value);
 											}}></button>
 									))}
 								</div>
@@ -180,12 +235,12 @@ const Slug = ({ addToCart, product, varients }) => {
 									<div className='relative'>
 										<select
 											className='rounded border appearance-none border-gray-300 py-2 focus:outline-none focus:ring-2 focus:ring-pink-200 focus:border-pink-500 text-base pl-3 pr-10'
-											value={sizeValue}
+											ref={sizeOption}
 											onChange={e => {
-												setSizeValue(e.target.value);
-												pageRefresh(e.target.value);
-											}}>
-											{Size.map(size => (
+												pageRefresh(Color, e.target.value);
+											}}
+											value={Size}>
+											{allSize.map(size => (
 												<option key={size} defaultChecked>
 													{size}
 												</option>
@@ -207,13 +262,15 @@ const Slug = ({ addToCart, product, varients }) => {
 								</div>
 							</div>
 							<div className='flex'>
-								<span className='title-font font-medium text-2xl text-gray-900'>$58.00</span>
+								<span className='title-font font-medium text-2xl text-gray-900'>₹{product.price}</span>
 								<button
 									className='flex ml-4 text-white bg-pink-500 border-0 lg:py-2 lg:px-6 focus:outline-none hover:bg-pink-600 rounded md:p-4 md:px-2 items-center justify-center p-2'
-									onClick={() => addToCart(slug, 1, 499, 'wear the code', 'XL', 'Red')}>
+									onClick={() => addToCart(slug, 1, product.price, product.title, Size, Color)}>
 									Add to cart
 								</button>
-								<button className='flex text-white ml-4 bg-pink-500 border-0 lg:py-2 lg:px-6 focus:outline-none hover:bg-pink-600 rounded md:p-4 md:px-2 items-center justify-center p-2'>
+								<button
+									className='flex text-white ml-4 bg-pink-500 border-0 lg:py-2 lg:px-6 focus:outline-none hover:bg-pink-600 rounded md:p-4 md:px-2 items-center justify-center p-2'
+									onClick={() => buyNow(slug, 1, product.price, product.title, Size, Color)}>
 									Buy Now
 								</button>
 								<button className='rounded-full w-10 h-10 bg-gray-200 p-0 border-0 inline-flex items-center justify-center text-gray-500 ml-4'>
@@ -235,6 +292,7 @@ const Slug = ({ addToCart, product, varients }) => {
 									id='pincode'
 									className='border-solid border no-spinner border-black'
 									ref={pincode}
+									onChange={e => onChangePin(e)}
 								/>
 								<button
 									onClick={checkServiceability}
@@ -263,38 +321,23 @@ export default Slug;
 
 export async function getServerSideProps(context) {
 	await dbConnect();
+	console.log('slug', context.query.slug);
 
-	let varient =
-		(await Product.find({ title: context.query.slug })).length === 0
-			? await Product.find({ slug: context.query.slug })
-			: await Product.find({ title: context.query.slug });
+	const product = await Product.find({ slug: context.query.slug });
+
+	let varient = await Product.find({ title: product[0].title, availQty: { $gt: 0 }, category: product[0].category });
 
 	let colorSizeSlug = {};
 
-	if (varient.length > 1) {
-		varient.forEach(item => {
-			if (item.color in colorSizeSlug) {
-				colorSizeSlug[item.color][item.size] = { slug: item.slug };
-			} else {
-				colorSizeSlug[item.color] = { [item.size]: { slug: item.slug } };
-			}
-		});
-	} else {
-		for (const item of varient) {
-			const itemColor = item.color;
-
-			const allProducts = await Product.find({ title: item.title, color: item.color });
-			allProducts.forEach(item => {
-				if (item.color in colorSizeSlug) {
-					colorSizeSlug[item.color][item.size] = { slug: item.slug };
-				} else {
-					colorSizeSlug[item.color] = { [item.size]: { slug: item.slug } };
-				}
-			});
+	varient.forEach(item => {
+		if (item.color in colorSizeSlug) {
+			colorSizeSlug[item.color][item.size] = { slug: item.slug };
+		} else {
+			colorSizeSlug[item.color] = { [item.size]: { slug: item.slug } };
 		}
-	}
+	});
 
 	return {
-		props: { product: JSON.parse(JSON.stringify(varient)), varients: JSON.parse(JSON.stringify(colorSizeSlug)) },
+		props: { product: JSON.parse(JSON.stringify(product[0])), varients: JSON.parse(JSON.stringify(colorSizeSlug)) },
 	};
 }
