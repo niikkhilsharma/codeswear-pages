@@ -15,7 +15,8 @@ const Slug = ({ buyNow, addToCart, product, varients }) => {
 	const [pin, setPin] = useState();
 
 	const checkServiceability = async () => {
-		let pins = await axios.get(`${process.env.HOST}/api/pincode`);
+		// let pins = await axios.get(`${process.env.HOST}/api/pincode`);
+		let pins = await axios.get(`/api/pincode`);
 		let pinJson = await pins.data;
 		if (pinJson.includes(parseInt(pin))) {
 			toast.success('Your pincode is servicable!', {
@@ -66,7 +67,8 @@ const Slug = ({ buyNow, addToCart, product, varients }) => {
 		console.log('titleeeeeeee', product.title);
 		console.log(product.category);
 
-		const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
+		// const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
+		const response = await axios.post(`/api/dbfind`, {
 			category: product.category,
 			title: product.title,
 			color: color,
@@ -79,7 +81,8 @@ const Slug = ({ buyNow, addToCart, product, varients }) => {
 		if (clickedProductSlug.length === 0) {
 			console.log('first');
 
-			const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
+			// const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
+			const response = await axios.post(`/api/dbfind`, {
 				category: 't-shirt',
 				color: color,
 			});

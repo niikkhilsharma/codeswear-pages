@@ -15,7 +15,7 @@ const Slug = ({ buyNow, addToCart, product, varients }) => {
 	const [pin, setPin] = useState();
 
 	const checkServiceability = async () => {
-		let pins = await axios.get(`${process.env.HOST}/api/pincode`);
+		let pins = await axios.get(`/api/pincode`);
 		let pinJson = await pins.data;
 		if (pinJson.includes(parseInt(pin))) {
 			toast.success('Your pincode is servicable!', {
