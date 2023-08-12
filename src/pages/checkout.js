@@ -5,7 +5,6 @@ import Link from 'next/link';
 import axios from 'axios';
 
 const Checkout = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
-	const productSlugs = Object.keys(cart);
 	const initializeRazorpay = () => {
 		return new Promise(resolve => {
 			const script = document.createElement('script');
@@ -32,14 +31,18 @@ const Checkout = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
 		// Make API call to the serverless API
 		// const data = await fetch('/api/razorpay', { method: 'POST' }).then(res => res.json());
 		/* Making the same request using axios */
-		const data = await axios.post('/api/razorpay', { productSlugs });
+		const data = await axios.post('/api/razorpay', { cart });
 		console.log(data.data);
+		console.log('going on');
+		console.log(data.data.amount);
+
 		var options = {
-			key: process.env.RAZORPAY_KEY, // Enter the Key ID generated from the Dashboard
+			// key: 'rzp_test_clHY76MNHYsOqg',
+			key: process.env.RAZORPAY_KEY,
 			name: 'Codeswear',
-			currency: data.currency,
-			amount: data.amount,
-			order_id: data.id,
+			currency: data.data.currency,
+			amount: data.data.amount,
+			order_id: data.data.id,
 			description: 'Thankyou for your test donation',
 			image: 'https://manuarora.in/logo.png',
 			handler: function (response) {
@@ -49,9 +52,9 @@ const Checkout = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
 				alert(response.razorpay_signature);
 			},
 			prefill: {
-				name: 'Manu Arora',
-				email: 'manuarorawork@gmail.com',
-				contact: '9999999999',
+				name: 'Nikhil Sharma',
+				email: 'niikkhilsharma@gmail.com',
+				contact: '8504920637',
 			},
 		};
 
@@ -170,12 +173,11 @@ const Checkout = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
 					<span className='font-bold '>Subtotal: ₹{subTotal}</span>
 
 					<div className='flex justify-center items-center'>
-						<Link
-							href='/checkout'
+						<button
 							className='border-solid border rounded-full bg-white flex items-center text-xl p-2 justify-between px-4'
 							onClick={makePayment}>
 							<BsFillBagCheckFill className='mr-2' /> Pay Now ₹{subTotal}
-						</Link>
+						</button>
 					</div>
 				</div>
 			</div>
