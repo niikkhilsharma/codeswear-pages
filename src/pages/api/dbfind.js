@@ -6,7 +6,7 @@ const dbfind = async (req, res) => {
 	if (req.method === 'POST') {
 		await dbConnect();
 		const findBody = req.body;
-		// console.log('findBody', findBody);
+		console.log('findBody', findBody);
 		findedProduct = await Product.find(findBody);
 	} else {
 		findedProduct = [];

@@ -8,6 +8,7 @@ const nextConfig = {
 			'tailwindui.com',
 			'images.unsplash.com',
 			'www.searchenginejournal.com',
+			'static.zara.net',
 		],
 	},
 };

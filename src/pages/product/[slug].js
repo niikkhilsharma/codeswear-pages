@@ -66,7 +66,8 @@ const Slug = ({ buyNow, addToCart, product, varients }) => {
 		console.log('titleeeeeeee', product.title);
 		console.log(product.category);
 
-		const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
+		// const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
+		const response = await axios.post(`/api/dbfind`, {
 			category: product.category,
 			title: product.title,
 			color: color,
@@ -78,12 +79,13 @@ const Slug = ({ buyNow, addToCart, product, varients }) => {
 
 		if (clickedProductSlug.length === 0) {
 			console.log('first');
+			// The code snippet is a React component that displays a product page with an image, title, description, price, color and size options, and buttons to add the product to the cart or buy it now. It also includes functionality to check the serviceability
 
-			const response = await axios.post(`${process.env.HOST}/api/dbfind`, {
-				category: 't-shirt',
+			const response = await axios.post(`/api/dbfind`, {
+				category: product.category,
 				color: color,
 			});
-			// console.log(response.data);
+			console.log(response.data);
 			clickedProductSlug = response.data;
 			window.location.href = `${clickedProductSlug[0].slug}`;
 		} else {
