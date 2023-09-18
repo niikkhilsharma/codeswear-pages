@@ -3,6 +3,8 @@ import { AiFillPlusCircle, AiFillMinusCircle } from 'react-icons/ai';
 import { BsFillBagCheckFill } from 'react-icons/bs';
 import Link from 'next/link';
 import axios from 'axios';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
 
 const Checkout = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
 	const initializeRazorpay = () => {
@@ -20,54 +22,51 @@ const Checkout = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
 			document.body.appendChild(script);
 		});
 	};
+
 	const makePayment = async () => {
 		const res = await initializeRazorpay();
 
 		if (!res) {
-			alert('Razorpay SDK Failed to load');
+			console.log('Razorpay SDK Failed to load');
 			return;
 		}
 
 		// Make API call to the serverless API
-		// const data = await fetch('/api/razorpay', { method: 'POST' }).then(res => res.json());
-		/* Making the same request using axios */
-		const data = await axios.post('/api/razorpay', { cart });
-		console.log(data.data);
-		console.log('going on');
-		console.log(data.data.amount);
+		const data = (await axios.post('/api/razorpay', { cart, subTotal })).data;
+		console.log('data below');
+		console.log(data);
 
 		var options = {
-			// key: 'rzp_test_clHY76MNHYsOqg',
-			key: process.env.RAZORPAY_KEY,
-			name: 'Codeswear',
-			currency: data.data.currency,
-			amount: data.data.amount,
-			order_id: data.data.id,
+			key: process.env.RAZORPAY_KEY, // Enter the Key ID generated from the Dashboard
+			name: 'CodesWear',
+			currency: data.currency,
+			amount: data.amount,
+			order_id: data.id,
 			description: 'Thankyou for your test donation',
 			image: 'https://manuarora.in/logo.png',
 			handler: function (response) {
+				console.log(response);
+
 				// Validate payment at server - using webhooks is a better idea.
-				alert(response.razorpay_payment_id);
-				alert(response.razorpay_order_id);
-				alert(response.razorpay_signature);
+				console.log(response.razorpay_payment_id);
+				console.log(response.razorpay_order_id);
+				console.log(response.razorpay_signature);
 			},
 			prefill: {
-				name: 'Nikhil Sharma',
+				name: 'Nikhil',
 				email: 'niikkhilsharma@gmail.com',
 				contact: '8504920637',
 			},
 		};
-
 		const paymentObject = new window.Razorpay(options);
 		paymentObject.open();
-
-		paymentObject.on('payment.failed', function (response) {
-			alert('Payment failed. Please try again. Contact support for help');
-		});
 	};
 
 	return (
 		<div className='container m-auto'>
+			<Head>
+				<meta name='viewport' content='width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0' />
+			</Head>
 			<div>
 				<h1 className='font-bold text-3xl p-4 text-center'>Checkout</h1>
 				<h2 className='text-xl font-bold py-4'>1. Delivery Details</h2>
@@ -176,7 +175,8 @@ const Checkout = ({ addToCart, cart, removeFromCart, clearCart, subTotal }) => {
 						<button
 							className='border-solid border rounded-full bg-white flex items-center text-xl p-2 justify-between px-4'
 							onClick={makePayment}>
-							<BsFillBagCheckFill className='mr-2' /> Pay Now ₹{subTotal}
+							<BsFillBagCheckFill className='mr-2' />
+							Pay Now ₹{subTotal}
 						</button>
 					</div>
 				</div>
